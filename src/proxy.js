@@ -1,4 +1,5 @@
 const sharp = require('sharp');
+const shouldCompress = require('./shouldCompress');
 
 function proxy(req, res) {
   sharp(req.params.url)
@@ -12,10 +13,12 @@ function proxy(req, res) {
       if (err) {
         console.error(err);
         res.status(500).send('Error processing image');
-      } else {
+      } else if (shouldCompress(req)) {
         res.setHeader('content-type', `image/${req.params.webp ? 'webp' : 'jpeg'}`);
         res.setHeader('content-length', info.size);
         res.status(200).send(output);
+      } else {
+        bypass(req, res, output);
       }
     });
 }
