@@ -1,45 +1,23 @@
-const request = require('request');
-const pick = require('lodash').pick;
-const shouldCompress = require('./shouldCompress');
-const redirect = require('./redirect');
-const compress = require('./compress');
-const bypass = require('./bypass');
-const copyHeaders = require('./copyHeaders');
+const sharp = require('sharp');
 
 function proxy(req, res) {
-  request.get(
-    req.params.url,
-    {
-      headers: {
-        ...pick(req.headers, ['cookie', 'dnt', 'referer']),
-        'user-agent': 'Bandwidth-Hero Compressor',
-        'x-forwarded-for': req.headers['x-forwarded-for'] || req.ip,
-        via: '1.1 bandwidth-hero'
-      },
-      timeout: 10000,
-      maxRedirects: 5,
-      encoding: null,
-      strictSSL: false,
-      gzip: true,
-      jar: true
-    },
-    (err, origin, buffer) => {
-      if (err || origin.statusCode >= 400) {
-        return redirect(req, res);
-      }
-
-      copyHeaders(origin, res);
-      res.setHeader('content-encoding', 'identity');
-      req.params.originType = origin.headers['content-type'] || '';
-      req.params.originSize = buffer.length;
-
-      if (shouldCompress(req)) {
-        compress(req, res, buffer);
+  sharp(req.params.url)
+    .grayscale(req.params.grayscale)
+    .toFormat(req.params.webp ? 'webp' : 'jpeg', {
+      quality: req.params.quality,
+      progressive: true,
+      optimizeScans: true
+    })
+    .toBuffer((err, output, info) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send('Error processing image');
       } else {
-        bypass(req, res, buffer);
+        res.setHeader('content-type', `image/${req.params.webp ? 'webp' : 'jpeg'}`);
+        res.setHeader('content-length', info.size);
+        res.status(200).send(output);
       }
-    }
-  );
+    });
 }
 
 module.exports = proxy;
