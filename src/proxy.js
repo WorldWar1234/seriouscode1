@@ -1,10 +1,18 @@
 // Import required modules
 const sharp = require('sharp'); // Image processing library
 const shouldCompress = require('./shouldCompress'); // Function to determine if compression is needed
+const validUrl = require('valid-url'); // Function to check if URL is valid
 
 // Define the proxy function
 function proxy(req, res) {
   try {
+    // Check if URL is valid
+    if (!validUrl.isUri(req.params.url)) {
+      console.error('Invalid URL:', req.params.url);
+      res.status(400).send('Invalid URL');
+      return;
+    }
+
     // Use Sharp to process the image
     sharp(req.params.url)
       .grayscale(req.params.grayscale) // Convert to grayscale if specified
