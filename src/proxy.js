@@ -4,6 +4,9 @@ const sharp = require('sharp');
 // Import the shouldCompress module for compression logic
 const shouldCompress = require('./shouldCompress');
 
+// Import the bypass module for bypassing compression
+const bypass = require('./bypass');
+
 // Export the proxy middleware function
 module.exports = (req, res) => {
   // Process the image using sharp
@@ -26,7 +29,7 @@ module.exports = (req, res) => {
         res.status(200).send(output);
       } else {
         // Bypass compression and send the original image
-        res.status(200).send(output);
+        bypass(req, res, output);
       }
     });
 };
