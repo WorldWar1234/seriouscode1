@@ -1,20 +1,20 @@
+// Set the default quality value
 const DEFAULT_QUALITY = 40;
 
+// Export the params middleware function
 function params(req, res, next) {
+  // Extract URL parameters from the request query
   const { url, jpeg, bw, l } = req.query;
 
+  // Check if the URL parameter is present
   if (!url) {
+    // Return a message if the URL parameter is missing
     return res.end('bandwidth-hero-proxy');
   }
 
-  const urls = Array.isArray(url) ? url.join('&url=') : url;
-  const cleanedUrl = urls.replace(/http:\/\/1\.1\.\d\.\d\/bmi\/(https?:\/\/)?/i, 'http://');
+  // Add more parameter processing logic here...
 
-  req.params.url = cleanedUrl;
-  req.params.webp = !jpeg;
-  req.params.grayscale = bw !== '0';
-  req.params.quality = parseInt(l, 10) || DEFAULT_QUALITY;
-
+  // Call the next middleware function
   next();
 }
 
